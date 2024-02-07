@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System;
 using System.Collections.Generic;
+using TMPro;
 
 public class Pose : MonoBehaviour
 {
@@ -17,19 +18,45 @@ public class Pose : MonoBehaviour
     float hipsHeightDiff;
     float hipsDepthDiff;
 
+    bool isGameStarted = false;
+    [SerializeField] GameObject startPanel;
+
+    float currentTime;
+    [SerializeField] TextMeshProUGUI stopWatchText;
+
+
     private void Start()
     {
         server = new UdpClient(port);
         thread1 = new Thread(ReceiveData);
         thread1.Start();
+        Time.timeScale = 0;
     }
 
 
     private void Update()
     {
-        if (thread1.IsAlive)
+        if (!thread1.IsAlive) return;
+
+        // start the game when the users cross their arms
+        if (!isGameStarted)
+        {
+            float leftWristX = GetLandmarkData(16, landmarks)["x"];
+            float rightWristX = GetLandmarkData(15, landmarks)["x"];
+
+            if (leftWristX != 0 && Mathf.Abs(leftWristX - rightWristX) < 0.05)
+            {
+                StartGame();
+            }
+        }
+        else
         {
             RotateTable();
+
+            // Start the stopwatch
+            currentTime += Time.deltaTime;
+            TimeSpan time = TimeSpan.FromSeconds(currentTime);
+            stopWatchText.text = time.Minutes.ToString() + ":" + time.Seconds.ToString() + ":" + time.Milliseconds.ToString();
         }
 
         if (Input.GetKeyDown(KeyCode.Q))
@@ -73,18 +100,25 @@ public class Pose : MonoBehaviour
 
     void RotateTable()
     {
-
         // Get the height difference between the hips
         hipsHeightDiff = GetLandmarkData(23, landmarks)["y"] - GetLandmarkData(24, landmarks)["y"];
 
         // Get the depth difference between the hips
         hipsDepthDiff = GetLandmarkData(23, landmarks)["z"] - GetLandmarkData(24, landmarks)["z"];
 
-        transform.rotation = Quaternion.Euler(hipsHeightDiff * 100, 0, hipsDepthDiff * 20); // Rotate the object in local space
+        transform.rotation = Quaternion.Euler(hipsHeightDiff * 150, 0, hipsDepthDiff * 20); // Rotate the object in local space
 
-        Debug.Log($"Waist Points Height Difference : {hipsHeightDiff}");
-        Debug.Log($"Waist Points Depth Difference : {hipsDepthDiff}");
+        Debug.Log($"Hip Points Height Difference : {hipsHeightDiff}");
+        Debug.Log($"Hip Points Depth Difference : {hipsDepthDiff}");
         Debug.Log("#################################");
+    }
+
+
+    void StartGame()
+    {
+        isGameStarted = true;
+        startPanel.SetActive(false);
+        Time.timeScale = 1;
     }
 }
 
