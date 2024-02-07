@@ -24,6 +24,9 @@ public class Pose : MonoBehaviour
     float currentTime;
     [SerializeField] TextMeshProUGUI stopWatchText;
 
+    public Transform leftHandTarget;
+    public Transform rightHandTarget;
+
 
     private void Start()
     {
@@ -113,6 +116,20 @@ public class Pose : MonoBehaviour
         Debug.Log("#################################");
     }
 
+    void AvatarMoving(){
+        float head = GetLandmarkData(0, landmarks)["x"];
+
+        float leftHandX = GetLandmarkData(20, landmarks)["x"];
+        float leftHandY = GetLandmarkData(20, landmarks)["y"];
+
+        float rightHandX = GetLandmarkData(19, landmarks)["x"];
+        float rightHandY = GetLandmarkData(19, landmarks)["y"];
+        
+        leftHandTarget.position = new Vector3(leftHandX, leftHandY, 0);
+        rightHandTarget.position = new Vector3(rightHandX, rightHandY, 0);
+        
+    
+    }
 
     void StartGame()
     {
@@ -120,5 +137,6 @@ public class Pose : MonoBehaviour
         startPanel.SetActive(false);
         Time.timeScale = 1;
     }
+
 }
 
