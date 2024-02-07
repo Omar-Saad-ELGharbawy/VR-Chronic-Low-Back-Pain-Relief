@@ -13,15 +13,14 @@ public class Pose : MonoBehaviour
     const int port = 11000;
     Thread thread1;
 
+
     float[] landmarks = new float[132];
 
-    float hipsHeightDiff;
-    float hipsDepthDiff;
+    public bool isGameStarted = false;
+    public GameObject startPanel;
 
-    bool isGameStarted = false;
-    [SerializeField] GameObject startPanel;
-
-    float currentTime;
+    public bool isTimerActive = false;
+    public float currentTime;
     [SerializeField] TextMeshProUGUI stopWatchText;
 
     public Transform leftHandTarget;
@@ -57,6 +56,7 @@ public class Pose : MonoBehaviour
             RotateTable();
 
             // Start the stopwatch
+            if (!isTimerActive) return;
             currentTime += Time.deltaTime;
             TimeSpan time = TimeSpan.FromSeconds(currentTime);
             stopWatchText.text = time.Minutes.ToString() + ":" + time.Seconds.ToString() + ":" + time.Milliseconds.ToString();
@@ -104,10 +104,10 @@ public class Pose : MonoBehaviour
     void RotateTable()
     {
         // Get the height difference between the hips
-        hipsHeightDiff = GetLandmarkData(23, landmarks)["y"] - GetLandmarkData(24, landmarks)["y"];
+        float hipsHeightDiff = GetLandmarkData(23, landmarks)["y"] - GetLandmarkData(24, landmarks)["y"];
 
         // Get the depth difference between the hips
-        hipsDepthDiff = GetLandmarkData(23, landmarks)["z"] - GetLandmarkData(24, landmarks)["z"];
+        float hipsDepthDiff = GetLandmarkData(23, landmarks)["z"] - GetLandmarkData(24, landmarks)["z"];
 
         transform.rotation = Quaternion.Euler(hipsHeightDiff * 150, 0, hipsDepthDiff * 20); // Rotate the object in local space
 
@@ -116,26 +116,13 @@ public class Pose : MonoBehaviour
         Debug.Log("#################################");
     }
 
-    void AvatarMoving(){
-        float head = GetLandmarkData(0, landmarks)["x"];
-
-        float leftHandX = GetLandmarkData(20, landmarks)["x"];
-        float leftHandY = GetLandmarkData(20, landmarks)["y"];
-
-        float rightHandX = GetLandmarkData(19, landmarks)["x"];
-        float rightHandY = GetLandmarkData(19, landmarks)["y"];
-        
-        leftHandTarget.position = new Vector3(leftHandX, leftHandY, 0);
-        rightHandTarget.position = new Vector3(rightHandX, rightHandY, 0);
-        
-    
-    }
 
     void StartGame()
     {
         isGameStarted = true;
         startPanel.SetActive(false);
         Time.timeScale = 1;
+        isTimerActive = true;
     }
 
 }
