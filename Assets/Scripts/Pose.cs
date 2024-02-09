@@ -26,6 +26,7 @@ public class Pose : MonoBehaviour
     public Transform leftHandTarget;
     public Transform rightHandTarget;
 
+    public Transform avatarSpine;
 
     private void Start()
     {
@@ -54,6 +55,9 @@ public class Pose : MonoBehaviour
         else
         {
             RotateTable();
+            LeftHandMoving();
+            RightHandMoving();
+            UpperBodyMoving();
 
             // Start the stopwatch
             if (!isTimerActive) return;
@@ -109,13 +113,63 @@ public class Pose : MonoBehaviour
         // Get the depth difference between the hips
         float hipsDepthDiff = GetLandmarkData(23, landmarks)["z"] - GetLandmarkData(24, landmarks)["z"];
 
-        transform.rotation = Quaternion.Euler(hipsHeightDiff * 150, 0, hipsDepthDiff * 20); // Rotate the object in local space
+        transform.rotation = Quaternion.Euler(hipsDepthDiff * 20, 0, -hipsHeightDiff * 150); // Rotate the object in local space
 
         Debug.Log($"Hip Points Height Difference : {hipsHeightDiff}");
         Debug.Log($"Hip Points Depth Difference : {hipsDepthDiff}");
         Debug.Log("#################################");
     }
 
+    void LeftHandMoving()
+    {
+
+        Dictionary<string, float> leftHand = GetLandmarkData(16, landmarks);
+
+        // Map the x-value to the new range
+        float mappedX = MapValue(leftHand["x"], 0, 1, 1.35f, 0);
+        float mappedY = MapValue(leftHand["y"], 0, 1, 4, 2);
+
+        // Update the newLeftHandPosition
+        Vector3 newLeftHandPosition = new Vector3(mappedX, mappedY, leftHandTarget.position.z);
+        leftHandTarget.position = newLeftHandPosition;
+
+        Debug.Log("Left Hand Position: " + newLeftHandPosition);
+
+    }
+
+    void RightHandMoving()
+    {
+
+        Dictionary<string, float> rightHand = GetLandmarkData(15, landmarks);
+
+        // Map the x-value to the new range
+        float mappedX = MapValue(rightHand["x"], 0, 1, 0, -1.35f);
+        float mappedY = MapValue(rightHand["y"], 0, 1, 4, 2);
+
+        // Update the newLeftHandPosition
+        Vector3 newrightHandPosition = new Vector3(mappedX, mappedY, rightHandTarget.position.z);
+        rightHandTarget.position = newrightHandPosition;
+
+        Debug.Log("Right Hand Position: " + newrightHandPosition);
+
+    }
+
+    void UpperBodyMoving()
+    {
+
+        float hipsMedian = (GetLandmarkData(23, landmarks)["x"] + GetLandmarkData(24, landmarks)["x"]) / 2;
+        float shoulderMedian = (GetLandmarkData(11, landmarks)["x"] + GetLandmarkData(12, landmarks)["x"]) / 2;
+
+        float mediansDiff = hipsMedian - shoulderMedian;
+
+        avatarSpine.localRotation = Quaternion.Euler(0, -mediansDiff * 200, 0);
+    }
+
+    // Function to map values from one range to another
+    float MapValue(float value, float inputMin, float inputMax, float outputMin, float outputMax)
+    {
+        return (value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin;
+    }
 
     void StartGame()
     {
